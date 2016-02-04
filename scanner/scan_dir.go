@@ -84,7 +84,7 @@ func sortedBasePath(date string) string {
 func date(filename string) string {
 	data, err := exif.Read(filename)
 	if err != nil{
-		return ""
+		return "0000:00:00"
 	}
 
 	date := data.Tags["Date and Time"]
