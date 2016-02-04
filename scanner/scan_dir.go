@@ -29,8 +29,7 @@ func (photo Photo) SortedPath() string {
 }
 
 func (photo Photo) SortedName() string {
-	dateStr := strings.Replace(photo.Date[0:10], ":", "_", -1)
-	return "GFY_" + dateStr +"_"+photo.Hash + photo.Ext
+	return "GFY_" + photo.Hash + photo.Ext
 }
 
 func (photo Photo) SortedFullPath() string {
@@ -78,7 +77,7 @@ func allPhotos(dir string) (photoFiles []string) {
 }
 
 func sortedBasePath(date string) string {
-	return strings.Join(strings.Split(date[0:7], ":"), string(filepath.Separator))
+	return strings.Join(strings.Split(date[0:10], ":"), string(filepath.Separator))
 }
 
 func date(filename string) string {
