@@ -13,6 +13,7 @@ import (
 	"strings"
 )
 
+const defaultDate = "0000:00:00"
 const filechunk = 8192
 var destination = ""
 type Photo struct {
@@ -29,6 +30,9 @@ func (photo Photo) SortedPath() string {
 }
 
 func (photo Photo) SortedName() string {
+	if photo.Date == defaultDate {
+		return photo.Name
+	}
 	return "GFY_" + photo.Hash + photo.Ext
 }
 
@@ -83,13 +87,13 @@ func sortedBasePath(date string) string {
 func date(filename string) string {
 	data, err := exif.Read(filename)
 	if err != nil{
-		return "0000:00:00"
+		return defaultDate
 	}
 
 	date := data.Tags["Date and Time"]
 
 	if date == "" {
-		return "0000:00:00"
+		return defaultDate
 	}
 
 	return date
