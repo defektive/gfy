@@ -20,7 +20,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/defektive/gfy/scanner"
-
 )
 
 var cfgFile string
@@ -40,16 +39,16 @@ var RootCmd = &cobra.Command{
 
 		files := scanner.ScanDir(Source, Destination)
 		for _, f := range files {
-			fmt.Println(f.SortedFullPath())
 			os.MkdirAll(f.SortedPath(), 0777)
 			_, err := os.Stat(f.SortedFullPath())
 			if os.IsNotExist(err) {
-				fmt.Println("Moving")
+				fmt.Printf("Moving %s >> %s\n", f.Path, f.SortedFullPath())
 			  os.Rename(f.Path, f.SortedFullPath())
+			} else if err == nil {
+				fmt.Printf("Duplicate %s >> %s\n", f.Path, f.SortedFullPath())
 			} else {
-				fmt.Println(err)
+				fmt.Printf("Error[%s] %s >> %s\n", err, f.Path, f.SortedFullPath())
 			}
-
 		}
 	},
 }

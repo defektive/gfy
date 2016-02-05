@@ -15,13 +15,15 @@ import (
 
 const defaultDate = "0000:00:00"
 const filechunk = 8192
+
 var destination = ""
+
 type Photo struct {
-	Path string
-	Name string
-	Ext string
-	Date string
-	Hash string
+	Path        string
+	Name        string
+	Ext         string
+	Date        string
+	Hash        string
 	Destination string
 }
 
@@ -48,12 +50,12 @@ func ScanDir(dir string, dest string) (photos []*Photo) {
 		photo := &Photo{
 			Path: filePath,
 			Name: f.Name(),
-			Ext: strings.ToLower(path.Ext(filePath)),
+			Ext:  strings.ToLower(path.Ext(filePath)),
 			Date: date(filePath),
 			Hash: hash(filePath),
 		}
 		photos = append(photos, photo)
-
+		fmt.Printf("%s	%s\n", photo.Hash, filePath)
 	}
 
 	return photos
@@ -65,16 +67,16 @@ func allPhotos(dir string) (photoFiles []string) {
 		filePath := path.Join(dir, f.Name())
 
 		switch mode := f.Mode(); {
-			case mode.IsDir():
-					photoFiles = append(photoFiles, allPhotos(filePath)...)
-			case mode.IsRegular():
+		case mode.IsDir():
+			photoFiles = append(photoFiles, allPhotos(filePath)...)
+		case mode.IsRegular():
 
-				ext := strings.ToLower(path.Ext(filePath))
+			ext := strings.ToLower(path.Ext(filePath))
 
-				if ext == ".jpg" {
-					fmt.Println("Adding " +filePath)
-					photoFiles = append(photoFiles, filePath)
-				}
+			if ext == ".jpg" {
+				fmt.Println("Adding " + filePath)
+				photoFiles = append(photoFiles, filePath)
+			}
 		}
 	}
 	return photoFiles
@@ -86,11 +88,11 @@ func sortedBasePath(date string) string {
 
 func date(filename string) string {
 	data, err := exif.Read(filename)
-	if err != nil{
+	if err != nil {
 		return defaultDate
 	}
 
-	date := data.Tags["Date and Time"]
+	date := data.Tags["Date and Time (Original)"]
 
 	if date == "" {
 		return defaultDate
@@ -108,7 +110,6 @@ func hash(filename string) string {
 
 	defer file.Close()
 
-	// calculate the file size
 	info, _ := file.Stat()
 	filesize := info.Size()
 	blocks := uint64(math.Ceil(float64(filesize) / float64(filechunk)))
@@ -118,8 +119,14 @@ func hash(filename string) string {
 		blocksize := int(math.Min(filechunk, float64(filesize-int64(i*filechunk))))
 		buf := make([]byte, blocksize)
 
-		file.Read(buf)
-		io.WriteString(hash, string(buf)) // append into the hash
+		_, err := file.Read(buf)
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			panic(err.Error())
+		}
+
+		hash.Write(buf)
 	}
 
 	return fmt.Sprintf("%x", hash.Sum(nil))
