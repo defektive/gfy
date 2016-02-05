@@ -55,7 +55,7 @@ func ScanDir(dir string, dest string) (photos []*Photo) {
 			Hash: hash(filePath),
 		}
 		photos = append(photos, photo)
-		fmt.Printf("%s	%s\n", photo.Hash, filePath)
+		fmt.Printf("%s	%s 	%s\n", photo.Hash, photo.Date, filePath)
 	}
 
 	return photos
@@ -92,13 +92,19 @@ func date(filename string) string {
 		return defaultDate
 	}
 
-	date := data.Tags["Date and Time (Original)"]
-
-	if date == "" {
-		return defaultDate
+	for _, tag := range dateTags() {
+		if data.Tags[tag] != "" {
+			return data.Tags[tag]
+		}
 	}
 
-	return date
+	return defaultDate
+}
+
+func dateTags() (tags []string) {
+	tags = append(tags, "Date and Time (Original)")
+	tags = append(tags, "Date and Time")
+	return tags
 }
 
 func hash(filename string) string {
