@@ -16,31 +16,35 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/defektive/gfy/scanner"
 
 	"github.com/spf13/cobra"
 )
-
-// versionCmd represents the version command
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Print version information",
+var Path string
+// indexCmd represents the index command
+var indexCmd = &cobra.Command{
+	Use:   "index",
+	Short: "Generate an index of your picture data",
+	Long: `Scans all your pics, saves the date, hash, and file path into an index`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		fmt.Println("version called")
+		files := scanner.ScanDir(Path)
+		for _, f := range files {
+			fmt.Printf("%s\t%s\t%s\n", f.Date, f.Hash(), f.Path)
+		}
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(versionCmd)
+	RootCmd.AddCommand(indexCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// versionCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// indexCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// versionCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
+	// indexCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	indexCmd.Flags().StringVarP(&Path, "path", "p", "", "Path to your photos")
 }

@@ -19,12 +19,9 @@ import (
 	"os"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/defektive/gfy/scanner"
 )
 
 var cfgFile string
-var Source string
-var Destination string
 // This represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "gfy",
@@ -33,24 +30,7 @@ var RootCmd = &cobra.Command{
 	in a pretty directory structure`,
 // Uncomment the following line if your bare application
 // has an action associated with it:
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Sorting photos in "+ Source)
-		fmt.Println("Moving photos to "+ Destination)
-
-		files := scanner.ScanDir(Source, Destination)
-		for _, f := range files {
-			os.MkdirAll(f.SortedPath(), 0777)
-			_, err := os.Stat(f.SortedFullPath())
-			if os.IsNotExist(err) {
-				fmt.Printf("Moving %s >> %s\n", f.Path, f.SortedFullPath())
-			  os.Rename(f.Path, f.SortedFullPath())
-			} else if err == nil {
-				fmt.Printf("Duplicate %s >> %s\n", f.Path, f.SortedFullPath())
-			} else {
-				fmt.Printf("Error[%s] %s >> %s\n", err, f.Path, f.SortedFullPath())
-			}
-		}
-	},
+// Run: func(cmd *cobra.Command, args []string) { },
 }
 
 
@@ -74,8 +54,6 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	// RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	RootCmd.Flags().StringVarP(&Source, "source", "s", "", "Source directory to read photos from")
-	RootCmd.Flags().StringVarP(&Destination, "destination", "d", "", "Destination directory to move photos to")
 }
 
 // initConfig reads in config file and ENV variables if set.

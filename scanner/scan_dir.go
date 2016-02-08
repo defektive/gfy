@@ -11,51 +11,57 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"github.com/tj/go-spin"
 )
 
 const defaultDate = "0000:00:00"
 const filechunk = 8192
-
-var destination = ""
 
 type Photo struct {
 	Path        string
 	Name        string
 	Ext         string
 	Date        string
-	Hash        string
-	Destination string
+	hash        string
+}
+func (photo *Photo) Hash() string {
+	if photo.hash == "" {
+		photo.hash = hashFile(photo.Path)
+	}
+	return photo.hash
 }
 
-func (photo Photo) SortedPath() string {
+func (photo *Photo) SortedPath(destination string) string {
 	return path.Join(destination, sortedBasePath(photo.Date))
 }
 
-func (photo Photo) SortedName() string {
+func (photo *Photo) SortedName() string {
 	if photo.Date == defaultDate {
 		return photo.Name
 	}
-	return "GFY_" + photo.Hash + photo.Ext
+	return "GFY_" + photo.Hash() + photo.Ext
 }
 
-func (photo Photo) SortedFullPath() string {
-	return path.Join(photo.SortedPath(), photo.SortedName())
+func (photo *Photo) SortedFullPath(destination string) string {
+	return path.Join(photo.SortedPath(destination), photo.SortedName())
 }
 
-func ScanDir(dir string, dest string) (photos []*Photo) {
-	destination = dest
+func ScanDir(dir string) (photos []*Photo) {
+	spinner := spin.New()
 	files := allPhotos(dir)
+	spinner.Set(spin.Box1)
+
 	for _, filePath := range files {
+		fmt.Printf("\r  \033[36mscanning %s\033[m %s ", dir, spinner.Next())
+
 		f, _ := os.Stat(filePath)
 		photo := &Photo{
 			Path: filePath,
 			Name: f.Name(),
 			Ext:  strings.ToLower(path.Ext(filePath)),
 			Date: date(filePath),
-			Hash: hash(filePath),
 		}
 		photos = append(photos, photo)
-		fmt.Printf("%s	%s 	%s\n", photo.Hash, photo.Date, filePath)
 	}
 
 	return photos
@@ -74,7 +80,6 @@ func allPhotos(dir string) (photoFiles []string) {
 			ext := strings.ToLower(path.Ext(filePath))
 
 			if ext == ".jpg" {
-				fmt.Println("Adding " + filePath)
 				photoFiles = append(photoFiles, filePath)
 			}
 		}
@@ -107,7 +112,7 @@ func dateTags() (tags []string) {
 	return tags
 }
 
-func hash(filename string) string {
+func hashFile(filename string) string {
 
 	file, err := os.Open(filename)
 	if err != nil {
