@@ -27,12 +27,10 @@ var Destination string
 var importCmd = &cobra.Command{
 	Use:   "import",
 	Short: "Import photos from SOURCE to DESTINATION",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Long: `Photos will be moved to a path based on date taken,
+	eg: 2015/05/13/GFY_[hash].jpg
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Photos not moved are **potential** duplicates.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Sorting photos in "+ Source)
 		fmt.Println("Moving photos to "+ Destination)
