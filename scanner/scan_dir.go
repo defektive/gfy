@@ -48,11 +48,11 @@ func (photo *Photo) SortedFullPath(destination string) string {
 
 func ScanDir(dir string) (photos []*Photo) {
 	spinner := spin.New()
-	files := allPhotos(dir)
+	files := allPhotos(dir, spinner)
 	spinner.Set(spin.Box1)
 
 	for _, filePath := range files {
-		fmt.Printf("\r  \033[36mscanning %s\033[m %s ", dir, spinner.Next())
+		fmt.Printf("\r  \033[36mcomputing %s\033[m %s ", dir, spinner.Next())
 
 		f, _ := os.Stat(filePath)
 		photo := &Photo{
@@ -67,14 +67,16 @@ func ScanDir(dir string) (photos []*Photo) {
 	return photos
 }
 
-func allPhotos(dir string) (photoFiles []string) {
+func allPhotos(dir string, spinner *spin.Spinner) (photoFiles []string) {
 	files, _ := ioutil.ReadDir(dir)
 	for _, f := range files {
+		fmt.Printf("\r  \033[36mscanning %s\033[m ", spinner.Next())
+
 		filePath := path.Join(dir, f.Name())
 
 		switch mode := f.Mode(); {
 		case mode.IsDir():
-			photoFiles = append(photoFiles, allPhotos(filePath)...)
+			photoFiles = append(photoFiles, allPhotos(filePath, spinner)...)
 		case mode.IsRegular():
 
 			ext := strings.ToLower(path.Ext(filePath))
