@@ -3,32 +3,46 @@ package scanner
 import (
 	"crypto/md5"
 	"fmt"
+	"github.com/nfnt/resize"
+	"github.com/tj/go-spin"
 	"github.com/xiam/exif"
+	"image/jpeg"
 	"io"
 	"io/ioutil"
+	"log"
 	"math"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
-	"github.com/tj/go-spin"
+	"time"
 )
 
 const defaultDate = "0000:00:00"
+const thumbDir = ".gfy_thumbs"
 const filechunk = 8192
+const thumbWidth = 256
 
 type Photo struct {
-	Path        string
-	Name        string
-	Ext         string
-	Date        string
-	hash        string
+	Path string
+	Name string
+	Ext  string
+	Date string
+	hash string
 }
+
 func (photo *Photo) Hash() string {
 	if photo.hash == "" {
 		photo.hash = hashFile(photo.Path)
 	}
 	return photo.hash
+}
+
+func (photo *Photo) Datetime() time.Time {
+
+	const shortForm = "2006:01:02 15:04:05 -0700 MST"
+	t, _ := time.Parse(shortForm, photo.Date+" -0700 MST")
+	return t
 }
 
 func (photo *Photo) SortedPath(destination string) string {
@@ -44,6 +58,44 @@ func (photo *Photo) SortedName() string {
 
 func (photo *Photo) SortedFullPath(destination string) string {
 	return path.Join(photo.SortedPath(destination), photo.SortedName())
+}
+
+func (photo *Photo) SortedThumbPath(destination string) string {
+	return path.Join(photo.SortedPath(path.Join(destination, thumbDir)))
+}
+
+func (photo *Photo) SortedFullThumbPath(destination string) string {
+	return path.Join(photo.SortedThumbPath(destination), photo.SortedName())
+}
+
+func (photo *Photo) Thumbnail(destinationDir string) string {
+	file, err := os.Open(photo.Path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// decode jpeg into image.Image
+	img, err := jpeg.Decode(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	file.Close()
+
+	// resize to width 1000 using Lanczos resampling
+	// and preserve aspect ratio
+	m := resize.Resize(thumbWidth, 0, img, resize.Lanczos3)
+
+	os.MkdirAll(photo.SortedThumbPath(destinationDir), 0777)
+	out, err := os.Create(photo.SortedFullThumbPath(destinationDir))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer out.Close()
+
+	// write new image to file
+	jpeg.Encode(out, m, nil)
+
+	return photo.SortedFullThumbPath(destinationDir)
 }
 
 func ScanDir(dir string) (photos []*Photo) {
@@ -75,7 +127,7 @@ func allPhotos(dir string, spinner *spin.Spinner) (photoFiles []string) {
 		filePath := path.Join(dir, f.Name())
 
 		switch mode := f.Mode(); {
-		case mode.IsDir():
+		case mode.IsDir() && f.Name() != thumbDir:
 			photoFiles = append(photoFiles, allPhotos(filePath, spinner)...)
 		case mode.IsRegular():
 

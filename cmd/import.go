@@ -17,12 +17,13 @@ package cmd
 import (
 	"fmt"
 	"github.com/defektive/gfy/scanner"
-	"os"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var Source string
 var Destination string
+
 // importCmd represents the import command
 var importCmd = &cobra.Command{
 	Use:   "import",
@@ -32,8 +33,8 @@ var importCmd = &cobra.Command{
 
 	Photos not moved are **potential** duplicates.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Sorting photos in "+ Source)
-		fmt.Println("Moving photos to "+ Destination)
+		fmt.Println("Sorting photos in " + Source)
+		fmt.Println("Moving photos to " + Destination)
 
 		files := scanner.ScanDir(Source)
 		for _, f := range files {

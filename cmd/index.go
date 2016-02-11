@@ -15,22 +15,51 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/defektive/gfy/scanner"
-
 	"github.com/spf13/cobra"
+	"os"
+	"time"
 )
+
+type SimplePhoto struct {
+	Path      string
+	ThumbPath string
+	Date      time.Time
+	Hash      string
+}
+
 var Path string
+
 // indexCmd represents the index command
 var indexCmd = &cobra.Command{
 	Use:   "index",
 	Short: "Generate an index of your picture data",
-	Long: `Scans all your pics, saves the date, hash, and file path into an index`,
+	Long:  `Scans all your pics, saves the date, hash, and file path into an index`,
 	Run: func(cmd *cobra.Command, args []string) {
 		files := scanner.ScanDir(Path)
+		db := scanner.OpenDb(Path)
+		photos := []*SimplePhoto{}
+		defer db.Close()
 		for _, f := range files {
 			fmt.Printf("%s\t%s\t%s\n", f.Date, f.Hash(), f.Path)
+			f.Thumbnail(Path)
+			// db.Add(f.Path, f.Date, f.Hash())
+			simple := &SimplePhoto{
+				Path:      f.Path,
+				ThumbPath: f.Thumbnail(Path),
+				Date:      f.Datetime(),
+				Hash:      f.Hash(),
+			}
+			photos = append(photos, simple)
 		}
+
+		b, err := json.Marshal(photos)
+		if err != nil {
+			fmt.Println("error:", err)
+		}
+		os.Stdout.Write(b)
 	},
 }
 
